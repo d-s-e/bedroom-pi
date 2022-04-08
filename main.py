@@ -1,4 +1,5 @@
-from signal import pause
+import signal
+
 from gpiozero import Button
 
 from led_lights import LedLights
@@ -14,6 +15,8 @@ BUTTON_RIGHT = 22   # GPIO22 - Button for left LED section
 
 class BedControl:
     def __init__(self, led_count, section_size, button_main, button_left, button_right):
+        signal.signal(signal.SIGINT, self.cleanup)
+        signal.signal(signal.SIGTERM, self.cleanup)
         self.lights = LedLights(led_count, section_size)
         self.button_main = Button(button_main)
         self.button_left = Button(button_left)
@@ -24,8 +27,11 @@ class BedControl:
         self.button_left.when_pressed = self.lights.toggle_left
         self.button_right.when_pressed = self.lights.toggle_right
         
-        pause()
+        signal.pause()
 
+    def cleanup(self, *args):
+        if self.lights:
+            self.lights.set_all_off()
 
 if __name__ == '__main__':
     ctrl = BedControl(LED_COUNT, SECTION_SIZE, BUTTON_MAIN, BUTTON_LEFT, BUTTON_RIGHT)
