@@ -2,19 +2,35 @@ from time import sleep
 from rpi_ws281x import Color, PixelStrip, ws
 
 # LED strip low level configuration:
-LED_PIN = 10           # LED GPIO pin (use 10 for SPI or 18 for PWM).
-LED_FREQ_HZ = 800000   # LED signal frequency in hertz (usually 800khz)
-LED_DMA = 10           # DMA channel to use for generating signal (try 10)
-LED_BRIGHTNESS = 255   # Set to 0 for darkest and 255 for brightest
-LED_INVERT = False     # True to invert the signal (when using NPN transistor level shift)
+LED_PIN = 10  # LED GPIO pin (use 10 for SPI or 18 for PWM).
+LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
+LED_DMA = 10  # DMA channel to use for generating signal (try 10)
+LED_BRIGHTNESS = 255  # Set to 0 for darkest and 255 for brightest
+LED_INVERT = False  # True to invert the signal (when using NPN transistor level shift)
 LED_CHANNEL = 0
 LED_STRIP = ws.SK6812_STRIP_GRBW
 
 
 class LedLights:
     """Class to handle the setup and direct control of the LED strip in a convenient way"""
-    def __init__(self, led_count, section_size, color_main=(255, 86, 0, 0), color_section=(0, 0, 0, 255)):
-        self._strip = PixelStrip(led_count, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL, LED_STRIP)
+
+    def __init__(
+        self,
+        led_count,
+        section_size,
+        color_main=(255, 86, 0, 0),
+        color_section=(0, 0, 0, 255),
+    ):
+        self._strip = PixelStrip(
+            led_count,
+            LED_PIN,
+            LED_FREQ_HZ,
+            LED_DMA,
+            LED_INVERT,
+            LED_BRIGHTNESS,
+            LED_CHANNEL,
+            LED_STRIP,
+        )
         self.led_buffer = []
         self.led_count = led_count
         self.section_size = section_size
@@ -39,7 +55,7 @@ class LedLights:
 
         if self.section_right:
             for i in range(self.section_size):
-                self.led_buffer[self.led_count -1 - i] = self.color_section
+                self.led_buffer[self.led_count - 1 - i] = self.color_section
 
         for i in range(self._strip.numPixels()):
             self._strip.setPixelColor(i, self.led_buffer[i])
@@ -98,7 +114,7 @@ class LedLights:
         self._set_lights()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     led = LedLights(led_count=100, section_size=12)
 
     # Output a demo light sequence for testing:
@@ -116,4 +132,3 @@ if __name__ == '__main__':
 
         led.set_main_off()
         sleep(1)
-

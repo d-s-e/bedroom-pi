@@ -5,12 +5,12 @@ from gpiozero import Button
 from led_lights import LedLights
 
 
-LED_COUNT = 100     # count of all LEDs in strip
-SECTION_SIZE = 12   # count of LEDs used for left and right section
+LED_COUNT = 100  # count of all LEDs in strip
+SECTION_SIZE = 12  # count of LEDs used for left and right section
 
-BUTTON_MAIN = 27    # GPIO27 - Button for main LED section
-BUTTON_LEFT = 17    # GPIO17 - Button for left LED section
-BUTTON_RIGHT = 22   # GPIO22 - Button for left LED section
+BUTTON_MAIN = 27  # GPIO27 - Button for main LED section
+BUTTON_LEFT = 17  # GPIO17 - Button for left LED section
+BUTTON_RIGHT = 22  # GPIO22 - Button for left LED section
 
 
 class BedControl:
@@ -33,7 +33,7 @@ class BedControl:
         if self.lights:
             self.lights.set_all_off()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     ctrl = BedControl(LED_COUNT, SECTION_SIZE, BUTTON_MAIN, BUTTON_LEFT, BUTTON_RIGHT)
     ctrl.run()
-
