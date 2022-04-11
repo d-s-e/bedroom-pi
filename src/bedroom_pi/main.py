@@ -26,7 +26,7 @@ class BedControl:
         self.button_main.when_pressed = self.lights.toggle_main
         self.button_left.when_pressed = self.lights.toggle_left
         self.button_right.when_pressed = self.lights.toggle_right
-        
+
         signal.pause()
 
     def cleanup(self, *args):

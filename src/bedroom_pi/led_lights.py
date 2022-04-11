@@ -12,8 +12,9 @@ LED_STRIP = ws.SK6812_STRIP_GRBW
 
 
 class LedLights:
+    """Class to handle the setup and direct control of the LED strip in a convenient way"""
     def __init__(self, led_count, section_size, color_main=(255, 86, 0, 0), color_section=(0, 0, 0, 255)):
-        self.strip = PixelStrip(led_count, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL, LED_STRIP)
+        self._strip = PixelStrip(led_count, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL, LED_STRIP)
         self.led_buffer = []
         self.led_count = led_count
         self.section_size = section_size
@@ -23,12 +24,12 @@ class LedLights:
         self.color_main = Color(*color_main)
         self.color_section = Color(*color_section)
         self.color_off = Color(0, 0, 0, 0)
-        self.strip.begin()
+        self._strip.begin()
         self.set_all_off()
 
     def _set_lights(self):
         if self.section_main:
-            self.led_buffer = [self.color_main] * self.led_count 
+            self.led_buffer = [self.color_main] * self.led_count
         else:
             self.led_buffer = [self.color_off] * self.led_count
 
@@ -40,49 +41,59 @@ class LedLights:
             for i in range(self.section_size):
                 self.led_buffer[self.led_count -1 - i] = self.color_section
 
-        for i in range(self.strip.numPixels()):
-            self.strip.setPixelColor(i, self.led_buffer[i])
-        self.strip.show()
+        for i in range(self._strip.numPixels()):
+            self._strip.setPixelColor(i, self.led_buffer[i])
+        self._strip.show()
 
     def set_all_off(self):
+        """Switch all lights off"""
         self.section_left = False
         self.section_right = False
         self.section_main = False
         self._set_lights()
 
     def toggle_left(self):
+        """Toggle the left light section"""
         self.section_left = not self.section_left
         self._set_lights()
 
     def set_left_on(self):
+        """Switch the left light section on"""
         self.section_left = True
         self._set_lights()
 
     def set_left_off(self):
+        """Switch the left light section off"""
         self.section_left = False
         self._set_lights()
 
     def toggle_right(self):
+        """Toggle the right light section"""
         self.section_right = not self.section_right
         self._set_lights()
 
     def set_right_on(self):
+        """Switch the right light section on"""
         self.section_right = True
         self._set_lights()
 
     def set_right_off(self):
+        """Switch the right light section off"""
         self.section_right = False
         self._set_lights()
 
     def toggle_main(self):
+        """Toggle the main lights"""
         self.section_main = not self.section_main
         self._set_lights()
 
     def set_main_on(self):
+        """Switch on the main lights"""
         self.section_main = True
         self._set_lights()
 
     def set_main_off(self):
+        """Switch off the main lights"""
         self.section_main = False
         self._set_lights()
 
@@ -90,6 +101,7 @@ class LedLights:
 if __name__ == '__main__':
     led = LedLights(led_count=100, section_size=12)
 
+    # Output a demo light sequence for testing:
     while True:
         led.set_main_on()
         sleep(1)
@@ -104,4 +116,4 @@ if __name__ == '__main__':
 
         led.set_main_off()
         sleep(1)
-        
+
