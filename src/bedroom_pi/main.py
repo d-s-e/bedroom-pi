@@ -1,7 +1,4 @@
-#!/usr/bin/python3
-
 import signal
-
 from gpiozero import Button
 
 from led_lights import LedLights
@@ -20,20 +17,22 @@ class BedControl:
         signal.signal(signal.SIGINT, self.cleanup)
         signal.signal(signal.SIGTERM, self.cleanup)
         self.lights = LedLights(led_count, section_size)
-        self.button_main = Button(button_main)
-        self.button_left = Button(button_left)
-        self.button_right = Button(button_right)
+        self.button_main = Button(button_main, pull_up=False, hold_time=1)
+        self.button_left = Button(button_left, pull_up=False, hold_time=1)
+        self.button_right = Button(button_right, pull_up=False, hold_time=1)
 
     def run(self):
-        self.button_main.when_pressed = self.lights.toggle_main
+        self.lights.run()
+
+        self.button_main.when_held = self.lights.set_main_off
+        self.button_main.when_pressed = self.lights.change_main_pattern
         self.button_left.when_pressed = self.lights.toggle_left
         self.button_right.when_pressed = self.lights.toggle_right
 
         signal.pause()
 
     def cleanup(self, *args):
-        if self.lights:
-            self.lights.set_all_off()
+        self.lights.stop()
 
 
 if __name__ == "__main__":

@@ -1,5 +1,15 @@
+import logging
+import signal
 from time import sleep
+from threading import Event, Thread
 from rpi_ws281x import Color, PixelStrip, ws
+
+from led_patterns import patterns
+
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
+
 
 # LED strip low level configuration:
 LED_PIN = 10  # LED GPIO pin (use 10 for SPI or 18 for PWM).
@@ -10,19 +20,22 @@ LED_INVERT = False  # True to invert the signal (when using NPN transistor level
 LED_CHANNEL = 0
 LED_STRIP = ws.SK6812_STRIP_GRBW
 
+# LED color presets:
+COLOR_SECTION = (0, 0, 0, 255)
 
-class LedLights:
-    """Class to handle the setup and direct control of the LED strip in a convenient way"""
 
-    def __init__(
-        self,
-        led_count,
-        section_size,
-        color_main=(255, 86, 0, 0),
-        color_section=(0, 0, 0, 255),
-    ):
+class LedThread(Thread):
+    def __init__(self, led_count, section_size):
+        super().__init__()
+        self._section_left = False
+        self._section_right = False
+        self._section_main = False
+        self._current_main_pattern = 0
+        self._led_buffer = []
+        self._led_count = led_count
+        self._section_size = section_size
         self._strip = PixelStrip(
-            led_count,
+            self._led_count,
             LED_PIN,
             LED_FREQ_HZ,
             LED_DMA,
@@ -31,104 +44,129 @@ class LedLights:
             LED_CHANNEL,
             LED_STRIP,
         )
-        self.led_buffer = []
-        self.led_count = led_count
-        self.section_size = section_size
-        self.section_left = False
-        self.section_right = False
-        self.section_main = False
-        self.color_main = Color(*color_main)
-        self.color_section = Color(*color_section)
-        self.color_off = Color(0, 0, 0, 0)
+
+        self.color_section = Color(*COLOR_SECTION)
         self._strip.begin()
-        self.set_all_off()
+        self.reset_lights()
+        self.stop_flag = Event()
+
+    def run(self):
+        while not self.stop_flag.is_set():
+            sleep(1)
+        self.reset_lights()
+
+    @property
+    def section_left(self):
+        return self._section_left
+
+    @section_left.setter
+    def section_left(self, value):
+        self._section_left = value
+        self._set_lights()
+
+    @property
+    def section_right(self):
+        return self._section_right
+
+    @section_right.setter
+    def section_right(self, value):
+        self._section_right = value
+        self._set_lights()
+
+    @property
+    def section_main(self):
+        return self._section_main
+
+    @section_main.setter
+    def section_main(self, value):
+        self._section_main = value
+        self._set_lights()
+
+    def reset_main(self):
+        self._section_main = False
+        self._current_main_pattern = 0
+        self._set_lights()
+
+    def select_next_main_pattern(self):
+        if self._current_main_pattern >= len(patterns) - 1:
+            self._current_main_pattern = 0
+        else:
+            self._current_main_pattern += 1
+        self._set_lights()
+
+    def reset_lights(self):
+        """Switch all lights off and reset selected patterns"""
+        self._section_left = False
+        self._section_right = False
+        self._section_main = False
+        self._current_main_pattern = 0
+        self._set_lights()
 
     def _set_lights(self):
-        if self.section_main:
-            self.led_buffer = [self.color_main] * self.led_count
+        log.debug(
+            f'Left: {"On " if self._section_left else "Off"} | Right: {"On " if self._section_right else "Off"} | Main: {patterns[self._current_main_pattern].name if self._section_main else "Off"}'
+        )
+
+        if self._section_main:
+            self._led_buffer = patterns[self._current_main_pattern].get_frame(
+                self._led_count
+            )
         else:
-            self.led_buffer = [self.color_off] * self.led_count
+            self._led_buffer = [Color(0, 0, 0, 0)] * self._led_count
 
-        if self.section_left:
-            for i in range(self.section_size):
-                self.led_buffer[i] = self.color_section
+        if self._section_left:
+            for i in range(self._section_size):
+                self._led_buffer[i] = self.color_section
 
-        if self.section_right:
-            for i in range(self.section_size):
-                self.led_buffer[self.led_count - 1 - i] = self.color_section
+        if self._section_right:
+            for i in range(self._section_size):
+                self._led_buffer[self._led_count - 1 - i] = self.color_section
 
         for i in range(self._strip.numPixels()):
-            self._strip.setPixelColor(i, self.led_buffer[i])
+            self._strip.setPixelColor(i, self._led_buffer[i])
         self._strip.show()
 
-    def set_all_off(self):
-        """Switch all lights off"""
-        self.section_left = False
-        self.section_right = False
-        self.section_main = False
-        self._set_lights()
+
+class LedLights:
+    """Class to handle the setup and direct control of the LED strip in a convenient way"""
+
+    def __init__(
+        self,
+        led_count,
+        section_size,
+    ):
+        signal.signal(signal.SIGINT, self.stop)
+        signal.signal(signal.SIGTERM, self.stop)
+        self.led_count = led_count
+        self.section_size = section_size
+        self.led_thread = LedThread(self.led_count, self.section_size)
+
+    def run(self):
+        self.led_thread.start()
+
+    def stop(self, *args):
+        self.led_thread.stop_flag.set()
+        self.led_thread.join()
 
     def toggle_left(self):
         """Toggle the left light section"""
-        self.section_left = not self.section_left
-        self._set_lights()
-
-    def set_left_on(self):
-        """Switch the left light section on"""
-        self.section_left = True
-        self._set_lights()
-
-    def set_left_off(self):
-        """Switch the left light section off"""
-        self.section_left = False
-        self._set_lights()
+        self.led_thread.section_left = not self.led_thread.section_left
 
     def toggle_right(self):
         """Toggle the right light section"""
-        self.section_right = not self.section_right
-        self._set_lights()
-
-    def set_right_on(self):
-        """Switch the right light section on"""
-        self.section_right = True
-        self._set_lights()
-
-    def set_right_off(self):
-        """Switch the right light section off"""
-        self.section_right = False
-        self._set_lights()
+        self.led_thread.section_right = not self.led_thread.section_right
 
     def toggle_main(self):
         """Toggle the main lights"""
-        self.section_main = not self.section_main
-        self._set_lights()
-
-    def set_main_on(self):
-        """Switch on the main lights"""
-        self.section_main = True
-        self._set_lights()
+        self.led_thread.section_main = not self.led_thread.section_main
 
     def set_main_off(self):
-        """Switch off the main lights"""
-        self.section_main = False
-        self._set_lights()
+        """Switch the main lights off and reset the main pattern"""
+        self.led_thread.reset_main()
 
-
-if __name__ == "__main__":
-    led = LedLights(led_count=100, section_size=12)
-
-    # Output a demo light sequence for testing:
-    while True:
-        led.set_main_on()
-        sleep(1)
-
-        led.set_left_on()
-        led.set_right_on()
-        sleep(1)
-
-        led.set_left_off()
-        led.set_right_off()
-        sleep(1)
-
-        led.set_main_off()
-        sleep(1)
+    def change_main_pattern(self):
+        """Selct the next pattern for the main lights and switch the main lights on"""
+        if self.led_thread.section_main:
+            self.led_thread.select_next_main_pattern()
+        else:
+            self.led_thread.section_main = True
