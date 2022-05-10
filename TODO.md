@@ -2,33 +2,33 @@
 
 ## Lights
 
+### Generic options:
+
+* [X] Full On/Off with simple push button
+* [X] Sensor buttons
+* [X] Color change option via button
+* [ ] Smoothly fade LEDs on On/Off
+* [ ] Dim option via button
+
 ### Main lights:
 
-[X] Full On/Off with simple push button
-[ ] Smoothly fade LEDs on On/Off
-[ ] Color change option via button?
-[ ] Dim option via button?
-[ ] Effect colors like rainbow or lava
-[ ] Sensor buttons?
-
-
-### Side lights:
-
-[X] Full On/Off with simple push button
-[ ] Smoothly fade LEDs on On/Off
-[ ] Sensor buttons?
-[ ] Dim option via button?
-[ ] Color change option via button?
+* [ ] Effect colors like rainbow or lava
 
 
 ## Audio:
 
-[ ] MPD server with network control
-[ ] Buttons to start/stop/skip playback?
-[ ] Bluetooth connection to receive mobile audio
+* [ ] MPD/Mopidy server with network control
+* [ ] Buttons to start/stop/skip playback?
+* [ ] Bluetooth connection to receive mobile audio
 
 
 ## Home automation:
 
-[ ] MQTT control and status for lights and audio
+* [ ] MQTT control and status for lights and audio
+
+## Generic:
+
+* [ ] Avoid having to be root for GPIO/SPI control
+* [ ] Create systemd unit
+* [ ] Create Debian package
 
