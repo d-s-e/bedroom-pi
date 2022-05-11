@@ -13,7 +13,7 @@ class Pattern:
 
 class SolidOrange(Pattern):
     name = "orange"
-    pattern = [Color(255, 86, 0, 0)]
+    pattern = [Color(128, 43, 0, 0)]
 
 
 class SolidBlue(Pattern):
