@@ -36,10 +36,46 @@ class SolidRGB(Pattern):
     pattern = [Color(255, 0, 0, 0), Color(0, 255, 0, 0), Color(0, 0, 255, 0)]
 
 
+class SolidFire(Pattern):
+    name = "Fire"
+    pattern = [
+        Color(11, 0, 0),
+        Color(22, 0, 0),
+        Color(86, 0, 0),
+        Color(81, 5, 0),
+        Color(75, 11, 0),
+        Color(69, 17, 0),
+        Color(64, 22, 0),
+        Color(69, 17, 0),
+        Color(75, 11, 0),
+        Color(81, 5, 0),
+        Color(86, 0, 0),
+        Color(22, 0, 0),
+    ]
+
+
+class SolidAurora(Pattern):
+    name = "Aurora"
+    pattern = [
+        Color(5, 0, 37),
+        Color(0, 0, 42),
+        Color(0, 10, 32),
+        Color(0, 21, 21),
+        Color(0, 32, 10),
+        Color(0, 37, 5),
+        Color(0, 32, 10),
+        Color(0, 21, 21),
+        Color(0, 10, 32),
+        Color(0, 0, 42),
+    ]
+
+
 patterns = (
+    SolidFire(),
+    SolidAurora(),
     SolidOrange(),
-    SolidRedOrange(),
-    SolidBlue(),
-    SolidGreen(),
-    SolidRGB(),
+    #SolidRedOrange(),
+    #SolidBlue(),
+    #SolidGreen(),
+    #SolidRGB(),
 )
