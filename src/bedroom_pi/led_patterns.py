@@ -11,6 +11,21 @@ class Pattern:
         return self.pattern * ceil(led_count / len(self.pattern))
 
 
+class SolidWhite(Pattern):
+    name = "white"
+    pattern = [Color(0, 0, 0, 255)]
+
+
+class SolidWhite50(Pattern):
+    name = "white 50%"
+    pattern = [Color(0, 0, 0, 128)]
+
+
+class SolidWhite25(Pattern):
+    name = "white 25%"
+    pattern = [Color(0, 0, 0, 64)]
+
+
 class SolidOrange(Pattern):
     name = "orange"
     pattern = [Color(128, 43, 0, 0)]
@@ -70,12 +85,18 @@ class SolidAurora(Pattern):
     ]
 
 
-patterns = (
+patterns_main = (
     SolidFire(),
     SolidAurora(),
     SolidOrange(),
-    #SolidRedOrange(),
-    #SolidBlue(),
-    #SolidGreen(),
-    #SolidRGB(),
+    # SolidRedOrange(),
+    # SolidBlue(),
+    # SolidGreen(),
+    # SolidRGB(),
+)
+
+patterns_section = (
+    SolidWhite25(),
+    SolidWhite50(),
+    SolidWhite(),
 )

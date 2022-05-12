@@ -1,7 +1,8 @@
 import signal
+from time import sleep, time
 from gpiozero import Button
 
-from led_lights import LedLights
+from led_lights import LedLights, LedSection
 
 
 LED_COUNT = 100  # count of all LEDs in strip
@@ -11,28 +12,38 @@ BUTTON_MAIN = 27  # GPIO27 - Button for main LED section
 BUTTON_LEFT = 17  # GPIO17 - Button for left LED section
 BUTTON_RIGHT = 22  # GPIO22 - Button for left LED section
 
+BUTTON_HOLD_TIME = 1  # hold time for long button press in seconds
+
 
 class BedControl:
     def __init__(self, led_count, section_size, button_main, button_left, button_right):
         signal.signal(signal.SIGINT, self.cleanup)
         signal.signal(signal.SIGTERM, self.cleanup)
         self.lights = LedLights(led_count, section_size)
-        self.button_main = Button(button_main, pull_up=False, hold_time=1)
-        self.button_left = Button(button_left, pull_up=False, hold_time=1)
-        self.button_right = Button(button_right, pull_up=False, hold_time=1)
+        self.buttons = {
+            Button(button_main, pull_up=False): LedSection.MAIN,
+            Button(button_left, pull_up=False): LedSection.LEFT,
+            Button(button_right, pull_up=False): LedSection.RIGHT,
+        }
 
     def run(self):
         self.lights.run()
-
-        self.button_main.when_held = self.lights.set_main_off
-        self.button_main.when_pressed = self.lights.change_main_pattern
-        self.button_left.when_pressed = self.lights.toggle_left
-        self.button_right.when_pressed = self.lights.toggle_right
-
+        for button in self.buttons.keys():
+            button.when_pressed = self.handle_button_press
         signal.pause()
 
     def cleanup(self, *args):
         self.lights.stop()
+
+    def handle_button_press(self, button: Button):
+        section = self.buttons[button]
+        if self.lights.led_status[section]:
+            push_time = time()
+            while button.is_pressed:
+                if time() - push_time > BUTTON_HOLD_TIME:
+                    self.lights.set_section_off(section)
+                    return
+        self.lights.change_pattern(section)
 
 
 if __name__ == "__main__":

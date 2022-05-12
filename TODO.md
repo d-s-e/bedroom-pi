@@ -8,11 +8,10 @@
 * [X] Sensor buttons
 * [X] Color change option via button
 * [ ] Smoothly fade LEDs on On/Off
-* [ ] Dim option via button
 
 ### Main lights:
 
-* [ ] Effect colors like rainbow or lava
+* [ ] Dynamic effect patterns like rainbow or lava
 
 
 ## Audio:
