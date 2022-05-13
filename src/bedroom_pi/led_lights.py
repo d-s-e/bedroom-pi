@@ -120,7 +120,7 @@ class LedThread(Thread):
 
         if self._section_right:
             for i in range(self._section_size):
-                self._led_buffer[self._led_count - 1 - i] = self._led_buffer[i] = patterns_section[
+                self._led_buffer[self._led_count - 1 - i] = patterns_section[
                     self._current_patterns[LedSection.RIGHT]
                 ].get_frame(self._section_size)[i]
 
