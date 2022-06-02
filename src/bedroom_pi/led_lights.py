@@ -7,6 +7,7 @@ from threading import Event, Thread
 from rpi_ws281x import Color, PixelStrip, ws
 
 from led_patterns import patterns_main, patterns_section
+from mqtt import MQTT
 
 
 logging.basicConfig(level=logging.INFO)
@@ -22,11 +23,17 @@ LED_INVERT = False  # True to invert the signal (when using NPN transistor level
 LED_CHANNEL = 0
 LED_STRIP = ws.SK6812_STRIP_GRBW
 
+# MQTT configuration:
+MQTT_ADDRESS = "localhost"
+MQTT_PORT = 1883
+MQTT_TOPIC_PREFIX = "bedroom-pi/"
+MQTT_CLIENT_ID = "bedroom-pi"
+
 
 class LedSection(Enum):
-    LEFT = ("left",)
-    RIGHT = ("right",)
-    MAIN = ("main",)
+    LEFT = "left"
+    RIGHT = "right"
+    MAIN = "main"
 
 
 class LedThread(Thread):
@@ -49,15 +56,17 @@ class LedThread(Thread):
             LED_CHANNEL,
             LED_STRIP,
         )
-
         self._strip.begin()
-        self.reset_lights()
+        self.mqtt = MQTT(MQTT_CLIENT_ID, MQTT_ADDRESS, MQTT_PORT, MQTT_TOPIC_PREFIX)
         self.stop_flag = Event()
 
     def run(self):
+        self.mqtt.run()
+        self.reset_lights()
         while not self.stop_flag.is_set():
             sleep(1)
         self.reset_lights()
+        self.mqtt.stop()
 
     @property
     def section_left(self):
@@ -67,6 +76,7 @@ class LedThread(Thread):
     def section_left(self, value):
         self._section_left = value
         self._set_lights()
+        self._publish_status(LedSection.LEFT)
 
     @property
     def section_right(self):
@@ -76,6 +86,7 @@ class LedThread(Thread):
     def section_right(self, value):
         self._section_right = value
         self._set_lights()
+        self._publish_status(LedSection.RIGHT)
 
     @property
     def section_main(self):
@@ -85,6 +96,7 @@ class LedThread(Thread):
     def section_main(self, value):
         self._section_main = value
         self._set_lights()
+        self._publish_status(LedSection.MAIN)
 
     def select_next_pattern(self, section: LedSection):
         if (
@@ -95,6 +107,7 @@ class LedThread(Thread):
         else:
             self._current_patterns[section] += 1
         self._set_lights()
+        self._publish_pattern(section)
 
     def reset_lights(self):
         """Switch all lights off and reset selected patterns"""
@@ -103,6 +116,9 @@ class LedThread(Thread):
         self._section_main = False
         self._current_patterns = defaultdict(lambda: 0)
         self._set_lights()
+        for section in LedSection:
+            self._publish_status(section)
+            self._publish_pattern(section)
 
     def _set_lights(self):
         if self._section_main:
@@ -127,6 +143,26 @@ class LedThread(Thread):
         for i in range(self._strip.numPixels()):
             self._strip.setPixelColor(i, self._led_buffer[i])
         self._strip.show()
+
+    def _publish_status(self, section: LedSection):
+        if section == LedSection.MAIN:
+            status = self._section_main
+        elif section == LedSection.LEFT:
+            status = self._section_left
+        elif section == LedSection.RIGHT:
+            status = self._section_right
+        else:
+            return
+        self.mqtt.publish(f"{section.value}/status", "ON" if status else "OFF")
+
+    def _publish_pattern(self, section: LedSection):
+        if section == LedSection.MAIN:
+            pattern_name = patterns_main[self._current_patterns[section]].name
+        elif section in (LedSection.LEFT, LedSection.RIGHT):
+            pattern_name = patterns_section[self._current_patterns[section]].name
+        else:
+            return
+        self.mqtt.publish(f"{section.value}/pattern", pattern_name)
 
 
 class LedLights:
@@ -189,3 +225,4 @@ class LedLights:
             self.led_thread.section_left = True
         elif section == LedSection.RIGHT:
             self.led_thread.section_right = True
+
