@@ -61,6 +61,7 @@ class LedThread(Thread):
         self.stop_flag = Event()
 
     def run(self):
+        self.mqtt.subscribe(callback = self.mqtt_handler)
         self.mqtt.run()
         self.reset_lights()
         while not self.stop_flag.is_set():
@@ -164,6 +165,16 @@ class LedThread(Thread):
             return
         self.mqtt.publish(f"{section.value}/pattern", pattern_name)
 
+    def mqtt_handler(self, topic, message):
+        if topic == "main/status":
+            self._section_main = True if message.upper() == "ON" else False
+        elif topic == "left/status":
+            self._section_left = True if message.upper() == "ON" else False
+        elif topic == "right/status":
+            self._section_right = True if message.upper() == "ON" else False
+        else:
+            return
+        self._set_lights()
 
 class LedLights:
     """Class to handle the setup and direct control of the LED strip in a convenient way"""

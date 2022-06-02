@@ -23,11 +23,11 @@
 
 ## Home automation:
 
-* [ ] MQTT control and status for lights and audio
+* [X] MQTT control and status for lights
+* [ ] MQTT control and status for audio
 
 ## Generic:
 
-* [ ] Avoid having to be root for GPIO/SPI control
 * [ ] Create systemd unit
 * [ ] Create Debian package
 
