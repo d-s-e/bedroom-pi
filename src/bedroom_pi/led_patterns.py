@@ -12,7 +12,7 @@ class Pattern:
 
 
 class SolidWhite(Pattern):
-    name = "white"
+    name = "white 100%"
     pattern = [Color(0, 0, 0, 255)]
 
 
