@@ -1,5 +1,7 @@
 # bedroom-pi
 
+**This repository has been moved to [Codeberg](https://codeberg.org/d-s-e/bedroom-pi).**
+
 This is a project for a "raspified" bedroom.
 
 After building a new bed with included speakers and LED lighting, I also
